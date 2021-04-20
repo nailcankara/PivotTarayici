@@ -6,8 +6,8 @@ from datetime import datetime
 pathList = os.listdir()
 
 filePath = os.getcwd()
-coinPath = filePath +  "\coinlist.txt"
-apiPath = filePath + "\coinApi.txt"
+coinPath = filePath +  "/coinlist.txt"
+apiPath = filePath + "/coinApi.txt"
 
 key_secret = pd.read_csv(apiPath,header=None)
 coins = pd.read_csv(coinPath , header=None)
@@ -63,13 +63,11 @@ for index,coin in enumerate(coins):
 
         pivots = PPSR(aylik)
 
-        print(gunluk.Close[0])
-        print(pivots[0])
-        print(pivots[1])
+
         if gunluk.Close[0] > pivots[0] and gunluk.Close[0] < pivots[1]:
             row = {'COINS':coin , 'ANLIK':gunluk.Close[0], 'P-M':pivots[0], 'R1-M':pivots[1]}
             targetCoins = targetCoins.append(row, ignore_index=True)
-            print("sa")
+
     
     except:
         pass
@@ -80,5 +78,5 @@ for index,coin in enumerate(coins):
 print("")
 print("Tarama tamamlandı.")
 
-targetCoins.to_csv(filePath + "\TaramaSonuclariAylik.csv" , index=False)
+targetCoins.to_csv(filePath + "/TaramaSonuclariAylik.csv" , index=False)
 
