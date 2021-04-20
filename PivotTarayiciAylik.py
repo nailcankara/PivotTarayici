@@ -11,6 +11,7 @@ apiPath = filePath + "/coinApi.txt"
 
 key_secret = pd.read_csv(apiPath,header=None)
 coins = pd.read_csv(coinPath , header=None)
+coins = coins.iloc[:,0].str.strip()
 coins = coins.values.reshape(-1,)
 
 
@@ -40,9 +41,19 @@ print("Toplam" , len(coins), "coin bulundu.")
 print("Coinler taranıyor... Lütfen bekleyiniz.")
 print("")
 
-targetCoins = pd.DataFrame([],columns=["COINS","ANLIK","P-M","R1-M"])
+coinsAylik = pd.DataFrame([],columns=["COINS"])
+coinsAylik2 = pd.DataFrame([],columns=["COINS"])
+coinsHaftalik = pd.DataFrame([],columns=["COINS"])
+coinsHaftalik2 = pd.DataFrame([],columns=["COINS"])
+coinsGunluk = pd.DataFrame([],columns=["COINS"])
+coins1saat = pd.DataFrame([],columns=["COINS"])
+coins4saat = pd.DataFrame([],columns=["COINS"])
+coinsHepsi = pd.DataFrame([],columns=["COINS"])
+
+
 
 for index,coin in enumerate(coins):
+    row = {'COINS':coin}
     kripto = coin
     
     try:
@@ -51,22 +62,74 @@ for index,coin in enumerate(coins):
         aylik.Date = (aylik.Date/1000).apply(datetime.fromtimestamp)
         aylik = aylik.set_index(aylik.Date).drop(columns=["Date"])
         aylik = aylik.astype(float)
-        aylik = aylik.iloc[-2:-1,:]
+        aylik = aylik.iloc[-2:,:]
+        
+        haftalik = client.get_historical_klines(kripto, Client.KLINE_INTERVAL_1WEEK, "2 week ago UTC")    #veri çek
+        haftalik = pd.DataFrame(haftalik , columns=columns ).drop(columns=gereksiz)
+        haftalik.Date = (haftalik.Date/1000).apply(datetime.fromtimestamp)
+        haftalik = haftalik.set_index(haftalik.Date).drop(columns=["Date"])
+        haftalik = haftalik.astype(float)
+        haftalik = haftalik.iloc[-2:,:]
 
-
-        gunluk = client.get_historical_klines(kripto, Client.KLINE_INTERVAL_1DAY, "1 day ago UTC")    #veri çek
+        gunluk = client.get_historical_klines(kripto, Client.KLINE_INTERVAL_1DAY, "2 day ago UTC")    #veri çek
         gunluk = pd.DataFrame(gunluk , columns=columns ).drop(columns=gereksiz)
         gunluk.Date = (gunluk.Date/1000).apply(datetime.fromtimestamp)
         gunluk = gunluk.set_index(gunluk.Date).drop(columns=["Date"])
         gunluk = gunluk.astype(float)
+        gunluk = gunluk.iloc[-2:,:]
+        
+        saat4 = client.get_historical_klines(kripto, Client.KLINE_INTERVAL_4HOUR, "8 hour ago UTC")    #veri çek
+        saat4 = pd.DataFrame(saat4 , columns=columns ).drop(columns=gereksiz)
+        saat4.Date = (saat4.Date/1000).apply(datetime.fromtimestamp)
+        saat4 = saat4.set_index(saat4.Date).drop(columns=["Date"])
+        saat4 = saat4.astype(float)
+        saat4 = saat4.iloc[-2:,:]
+        
+        saat1 = client.get_historical_klines(kripto, Client.KLINE_INTERVAL_1HOUR, "2 hour ago UTC")    #veri çek
+        saat1 = pd.DataFrame(saat1 , columns=columns ).drop(columns=gereksiz)
+        saat1.Date = (saat1.Date/1000).apply(datetime.fromtimestamp)
+        saat1 = saat1.set_index(saat1.Date).drop(columns=["Date"])
+        saat1 = saat1.astype(float)
+        saat1 = saat1.iloc[-2:,:]
         
 
-        pivots = PPSR(aylik)
+        pivotAylik = PPSR(aylik.iloc[0,:])
+        pivotHaftalik = PPSR(haftalik.iloc[0,:])
+        pivotGunluk = PPSR(gunluk.iloc[0,:])
 
 
-        if gunluk.Close[0] > pivots[0] and gunluk.Close[0] < pivots[1]:
-            row = {'COINS':coin , 'ANLIK':gunluk.Close[0], 'P-M':pivots[0], 'R1-M':pivots[1]}
-            targetCoins = targetCoins.append(row, ignore_index=True)
+        if gunluk.Close[1] > pivotAylik[0] and gunluk.Close[1] < pivotAylik[1]:
+            coinsAylik = coinsAylik.append(row, ignore_index=True)
+            if saat4.Close[1] > pivotAylik[0] and saat4.Close[1] < pivotAylik[1]:
+                if saat4.Close[1] > pivotHaftalik[0] and saat4.Close[1] < pivotHaftalik[1]:
+                    if saat1.Close[1] > pivotHaftalik[0] and saat1.Close[1] < pivotHaftalik[1]:
+                        if saat1.Close[1] > pivotGunluk[0] and saat1.Close[1] < pivotGunluk[1]:
+                            coinsHepsi = coinsHepsi.append(row, ignore_index=True)
+                            
+            
+        
+        ##########################
+            
+        if saat4.Close[1] > pivotAylik[0] and saat4.Close[1] < pivotAylik[1]:
+            coinsAylik2 = coinsAylik2.append(row, ignore_index=True)
+            if saat4.Close[1] > pivotHaftalik[0] and saat4.Close[1] < pivotHaftalik[1]:
+                coins4saat = coins4saat.append(row, ignore_index=True)
+            
+        if saat4.Close[1] > pivotHaftalik[0] and saat4.Close[1] < pivotHaftalik[1]:
+            coinsHaftalik = coinsHaftalik.append(row, ignore_index=True)
+            
+            
+        ##########################
+            
+        if saat1.Close[1] > pivotHaftalik[0] and saat1.Close[1] < pivotHaftalik[1]:
+            coinsHaftalik2 = coinsHaftalik2.append(row, ignore_index=True)
+            if saat1.Close[1] > pivotGunluk[0] and saat1.Close[1] < pivotGunluk[1]:
+                coins1saat = coins1saat.append(row, ignore_index=True)
+            
+        if saat1.Close[1] > pivotGunluk[0] and saat1.Close[1] < pivotGunluk[1]:
+            coinsGunluk = coinsGunluk.append(row, ignore_index=True)
+   
+        
 
     
     except:
@@ -78,5 +141,16 @@ for index,coin in enumerate(coins):
 print("")
 print("Tarama tamamlandı.")
 
-targetCoins.to_csv(filePath + "/TaramaSonuclariAylik.csv" , index=False)
+coinsAylik.to_csv(filePath + "/Gunluk_Bar_Aylik_Pivot.csv" , index=False)
+coinsAylik2.to_csv(filePath + "/4_Saatlik_Bar_Aylik_Pivot.csv" , index=False)
+coinsHaftalik.to_csv(filePath + "/4_Saatlik_Bar_Haftalik_Pivot.csv" , index=False)
+coinsHaftalik2.to_csv(filePath + "/1_Saatlik_Bar_Haftalik_Pivot.csv" , index=False)
+coinsGunluk.to_csv(filePath + "/1_Saatlik_Bar_Gunluk_Pivot.csv" , index=False)
+coins1saat.to_csv(filePath + "/1_Saatlik_Bar_Haftalik_ve_Gunluk_Pivot.csv" , index=False)
+coins4saat.to_csv(filePath + "/4_Saatlik_Bar_Haftalik_ve_Aylik_Pivot.csv" , index=False)
+coinsHepsi.to_csv(filePath + "/Tum_Pivotlarin_Kosulunu_Saglayanlar.csv" , index=False)
+
+
+
+
 
