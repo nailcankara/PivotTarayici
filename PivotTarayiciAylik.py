@@ -6,7 +6,7 @@ from datetime import datetime
 pathList = os.listdir()
 
 filePath = os.getcwd()
-coinPath = filePath +  "/coinlist.txt"
+coinPath = filePath +  "/coinList.txt"
 apiPath = filePath + "/coinApi.txt"
 
 key_secret = pd.read_csv(apiPath,header=None)
