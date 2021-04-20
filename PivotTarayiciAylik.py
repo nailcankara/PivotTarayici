@@ -36,9 +36,9 @@ def PPSR(df):
     #df = df.join(PSR)  
     return PSR.values[0]
 
-print("")
 print("Toplam" , len(coins), "coin bulundu.")
 print("Coinler taranıyor... Lütfen bekleyiniz.")
+print("")
 
 targetCoins = pd.DataFrame([],columns=["COINS","ANLIK","P-M","R1-M"])
 
