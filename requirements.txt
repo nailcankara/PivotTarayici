@@ -1,3 +1,8 @@
 pandas
 python-binance
 datetime
+scipy
+matplotlib
+numpy
+pandas_ta
+datetime
