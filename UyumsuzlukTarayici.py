@@ -77,9 +77,6 @@ for index,coin in enumerate(coins):
                 rMax = rsiMax[1] - rsiMax[0] 
                 rMin = rsiMin[1] - rsiMin[0] 
                 
-                print(sMax,rMax)
-                print(sMin,rMin)
-                print(lmaxx[-1] ,lminn[-1] )
                 
                 if lmaxx[-1] > lminn[-1] and int(lmaxx[-1]) == int(lenC-2):
                     if np.sign(sMax) != np.sign(rMax):
